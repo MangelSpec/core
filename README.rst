@@ -3,6 +3,15 @@ Home Assistant |Chat Status|
 
 Open source home automation that puts local control and privacy first. Powered by a worldwide community of tinkerers and DIY enthusiasts. Perfect to run on a Raspberry Pi or a local server.
 
+Fork Notice
+-----------
+
+This is a forked version of Home Assistant core with a modified **vesync** component. Changes include:
+
+- RGB nightlight support for humidifiers
+- Better icons for humidifier features
+- Uses a forked pyvesync library until features are merged upstream
+
 Check out `home-assistant.io <https://home-assistant.io>`__ for `a
 demo <https://demo.home-assistant.io>`__, `installation instructions <https://home-assistant.io/getting-started/>`__,
 `tutorials <https://home-assistant.io/getting-started/automation/>`__ and `documentation <https://home-assistant.io/docs/>`__.
