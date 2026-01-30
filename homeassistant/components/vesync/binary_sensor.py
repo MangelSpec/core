@@ -40,6 +40,8 @@ SENSOR_DESCRIPTIONS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
     VeSyncBinarySensorEntityDescription(
         key="water_lacks",
         translation_key="water_lacks",
+        name="Low water",
+        icon="mdi:water-alert",
         is_on=lambda device: device.state.water_lacks,
         device_class=BinarySensorDeviceClass.PROBLEM,
         exists_fn=lambda device: rgetattr(device, "state.water_lacks") is not None,
@@ -47,6 +49,8 @@ SENSOR_DESCRIPTIONS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
     VeSyncBinarySensorEntityDescription(
         key="details.water_tank_lifted",
         translation_key="water_tank_lifted",
+        name="Water tank lifted",
+        icon="mdi:cup-water",
         is_on=lambda device: device.state.water_tank_lifted,
         device_class=BinarySensorDeviceClass.PROBLEM,
         exists_fn=(
@@ -99,6 +103,7 @@ def _setup_entities(
 class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
     """Vesync binary sensor class."""
 
+    _attr_has_entity_name = True
     entity_description: VeSyncBinarySensorEntityDescription
 
     def __init__(

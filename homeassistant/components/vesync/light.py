@@ -4,11 +4,13 @@ import logging
 from typing import Any
 
 from pyvesync.base_devices.bulb_base import VeSyncBulb
+from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
 from pyvesync.base_devices.switch_base import VeSyncSwitch
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
+    ATTR_RGB_COLOR,
     ColorMode,
     LightEntity,
 )
@@ -38,7 +40,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     @callback
-    def discover(devices: list[VeSyncBulb | VeSyncSwitch]) -> None:
+    def discover(devices: list[VeSyncBulb | VeSyncSwitch | VeSyncHumidifier]) -> None:
         """Add new devices to platform."""
         _setup_entities(devices, async_add_entities, coordinator)
 
@@ -48,7 +50,8 @@ async def async_setup_entry(
 
     _setup_entities(
         config_entry.runtime_data.manager.devices.bulbs
-        + config_entry.runtime_data.manager.devices.switches,
+        + config_entry.runtime_data.manager.devices.switches
+        + config_entry.runtime_data.manager.devices.humidifiers,
         async_add_entities,
         coordinator,
     )
@@ -56,12 +59,13 @@ async def async_setup_entry(
 
 @callback
 def _setup_entities(
-    devices: list[VeSyncBulb | VeSyncSwitch],
+    devices: list[VeSyncBulb | VeSyncSwitch | VeSyncHumidifier],
     async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
 ) -> None:
     """Check if device is a light and add entity."""
     entities: list[VeSyncBaseLightHA] = []
+
     for dev in devices:
         if isinstance(dev, VeSyncBulb):
             if dev.supports_color_temp:
@@ -70,6 +74,8 @@ def _setup_entities(
                 entities.append(VeSyncDimmableLightHA(dev, coordinator))
         elif isinstance(dev, VeSyncSwitch) and dev.supports_dimmable:
             entities.append(VeSyncDimmableLightHA(dev, coordinator))
+        elif isinstance(dev, VeSyncHumidifier) and dev.supports_rgb_nightlight:
+            entities.append(VeSyncHumidifierRGBNightLightHA(dev, coordinator))
 
     async_add_entities(entities, update_before_add=True)
 
@@ -195,4 +201,85 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLightHA, LightEntity):
         # ensure value between minimum and maximum Mireds
         return color_util.color_temperature_mired_to_kelvin(
             max(MIN_MIREDS, min(color_temp_value, MAX_MIREDS))
+        )
+
+
+class VeSyncHumidifierRGBNightLightHA(VeSyncBaseEntity, LightEntity):
+    """Representation of a VeSync Humidifier RGB Night Light."""
+
+    _attr_has_entity_name = True
+    _attr_color_mode = ColorMode.RGB
+    _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_translation_key = "nightlight"
+    _attr_name = "Night light"
+    _attr_icon = "mdi:lightbulb-night"
+
+    def __init__(
+        self,
+        device: VeSyncHumidifier,
+        coordinator: VeSyncDataCoordinator,
+    ) -> None:
+        """Initialize the VeSync Humidifier RGB Night Light."""
+        super().__init__(device, coordinator)
+        self._attr_unique_id = f"{super().unique_id}-nightlight"
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if night light is on."""
+        return self.device.state.rgb_nightlight_status == "on"
+
+    @property
+    def brightness(self) -> int | None:
+        """Return the brightness of the night light."""
+        if self.device.state.rgb_nightlight_brightness is None:
+            return None
+        # Convert device brightness (40-100) to HA brightness (0-255)
+        # Device minimum brightness is 40
+        device_brightness = max(40, self.device.state.rgb_nightlight_brightness)
+        return round(((device_brightness - 40) / 60) * 255)
+
+    @property
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        """Return the RGB color of the night light."""
+        red = self.device.state.rgb_nightlight_red
+        green = self.device.state.rgb_nightlight_green
+        blue = self.device.state.rgb_nightlight_blue
+        if red is None or green is None or blue is None:
+            return None
+        return (red, green, blue)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the night light on."""
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        rgb_color = kwargs.get(ATTR_RGB_COLOR)
+
+        # Convert HA brightness (0-255) to device brightness (40-100)
+        # Device minimum brightness is 40
+        brightness_pct = None
+        if brightness is not None:
+            brightness_pct = round(40 + (brightness / 255) * 60)
+
+        red, green, blue = None, None, None
+        if rgb_color is not None:
+            red, green, blue = rgb_color
+
+        await self.device.set_rgb_nightlight(
+            power=True,
+            brightness=brightness_pct,
+            red=red,
+            green=green,
+            blue=blue,
+        )
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the night light off."""
+        await self.device.set_rgb_nightlight(power=False)
+        self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available and self.device.state.rgb_nightlight_status is not None
         )

@@ -56,6 +56,8 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
     VeSyncNumberEntityDescription(
         key="mist_level",
         translation_key="mist_level",
+        name="Mist level",
+        icon="mdi:water-percent",
         native_min_value_fn=lambda device: min(_mist_levels(device)),
         native_max_value_fn=lambda device: max(_mist_levels(device)),
         native_step=1,
@@ -63,7 +65,20 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
         exists_fn=is_humidifier,
         set_value_fn=_set_mist_level,
         value_fn=lambda device: device.state.mist_virtual_level,
-    )
+    ),
+    VeSyncNumberEntityDescription(
+        key="warm_mist_level",
+        translation_key="warm_mist_level",
+        name="Warm mist level",
+        icon="mdi:heat-wave",
+        native_min_value_fn=lambda device: min(device.warm_mist_levels),
+        native_max_value_fn=lambda device: max(device.warm_mist_levels),
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        exists_fn=lambda device: is_humidifier(device) and device.supports_warm_mist,
+        set_value_fn=lambda device, value: device.set_warm_level(int(value)),
+        value_fn=lambda device: device.state.warm_mist_level or 0,
+    ),
 ]
 
 

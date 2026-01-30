@@ -1,6 +1,6 @@
 {
   "domain": "vesync",
-  "name": "VeSync",
+  "name": "VeSync (Custom)",
   "codeowners": [
     "@markperdue",
     "@webdjoe",
@@ -13,5 +13,6 @@
   "documentation": "https://www.home-assistant.io/integrations/vesync",
   "iot_class": "cloud_polling",
   "loggers": ["pyvesync"],
-  "requirements": ["pyvesync==3.4.1"]
+  "version": "1.0.0-custom",
+  "requirements": ["pyvesync @ git+https://github.com/MangelSpec/pyvesync.git@dev"]
 }

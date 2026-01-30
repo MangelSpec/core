@@ -87,6 +87,8 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
             lambda device: rgetattr(device, "state.display_set_status") is not None
         ),
         translation_key="display",
+        name="Display",
+        icon="mdi:television",
         on_fn=lambda device: _toggle_display(device, True),
         off_fn=lambda device: _toggle_display(device, False),
     ),
@@ -95,6 +97,8 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         is_on=lambda device: device.state.child_lock,
         exists_fn=(lambda device: rgetattr(device, "state.child_lock") is not None),
         translation_key="child_lock",
+        name="Child lock",
+        icon="mdi:lock",
         on_fn=lambda device: _toggle_child_lock(device, True),
         off_fn=lambda device: _toggle_child_lock(device, False),
     ),
@@ -105,6 +109,8 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
             lambda device: rgetattr(device, "state.automatic_stop_config") is not None
         ),
         translation_key="auto_off_config",
+        name="Automatic stop",
+        icon="mdi:stop-circle-outline",
         on_fn=lambda device: _toggle_auto_stop(device, True),
         off_fn=lambda device: _toggle_auto_stop(device, False),
     ),
@@ -154,6 +160,7 @@ def _setup_entities(
 class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity[VeSyncBaseDevice]):
     """VeSync switch entity class."""
 
+    _attr_has_entity_name = True
     entity_description: VeSyncSwitchEntityDescription
 
     def __init__(
