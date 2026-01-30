@@ -12,6 +12,15 @@ This is a forked version of Home Assistant core with a modified **vesync** compo
 - Better icons for humidifier features
 - Uses a forked pyvesync library until features are merged upstream
 
+Installation
+~~~~~~~~~~~~
+
+1. Copy the ``homeassistant/components/vesync`` folder from this repo
+2. Paste it into your Home Assistant config directory: ``config/custom_components/vesync``
+3. Restart Home Assistant
+
+If you already have the official vesync integration configured, the custom component will override it.
+
 Check out `home-assistant.io <https://home-assistant.io>`__ for `a
 demo <https://demo.home-assistant.io>`__, `installation instructions <https://home-assistant.io/getting-started/>`__,
 `tutorials <https://home-assistant.io/getting-started/automation/>`__ and `documentation <https://home-assistant.io/docs/>`__.
